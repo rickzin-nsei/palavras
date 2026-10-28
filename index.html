@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eef3ed">
+  <title>Palavra — laboratório de interfaces</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172a27;
+      --muted: #61726d;
+      --paper: #f3f5ed;
+      --surface: #fffef8;
+      --line: #d4ded5;
+      --green: #18634e;
+      --coral: #ca553e;
+      --blue: #3156ad;
+      --yellow: #f0cb62;
+      --mono: "DM Mono", "Courier New", monospace;
+      --sans: "DM Sans", "Trebuchet MS", sans-serif;
+      --display: "Fraunces", Georgia, serif;
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background-color: var(--paper);
+      background-image: radial-gradient(#aec4b5 0.7px, transparent 0.7px);
+      background-size: 18px 18px;
+    }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 3px solid #1d5bca; outline-offset: 3px; }
+    .skip-link { position: fixed; z-index: 10; top: 8px; left: 8px; padding: 10px 14px; background: var(--ink); color: white; transform: translateY(-150%); }
+    .skip-link:focus { transform: translateY(0); }
+    .page-shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; min-height: 72px; border-bottom: 1px solid rgba(23, 42, 39, .2); }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 600 24px var(--display); }
+    .brand-mark { display: grid; grid-template-columns: repeat(2, 10px); gap: 3px; transform: rotate(-6deg); }
+    .brand-mark i { width: 10px; height: 10px; background: var(--green); }
+    .brand-mark i:nth-child(2) { background: var(--yellow); }
+    .brand-mark i:nth-child(3) { background: var(--coral); }
+    .top-note { color: var(--muted); font-size: 13px; }
+    main { padding: 30px 0 70px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+    .eyebrow, .section-kicker { margin: 0 0 8px; color: var(--green); font: 500 11px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 680px; margin-bottom: 0; font: 600 clamp(32px, 4vw, 48px)/1.02 var(--display); letter-spacing: 0; }
+    .intro-copy { max-width: 325px; margin: 0 0 3px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .council { padding: 17px 20px 19px; border: 1px solid var(--line); background: rgba(255, 254, 248, .9); box-shadow: 3px 4px 0 rgba(23, 42, 39, .08); }
+    .council-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .council-head h2 { margin: 0; font: 600 20px/1.1 var(--display); }
+    .consensus { color: var(--muted); font-size: 12px; }
+    .agent-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .agent { min-width: 0; padding: 4px 18px 2px; border-left: 1px solid var(--line); }
+    .agent:first-child { padding-left: 0; border-left: 0; }
+    .agent:last-child { padding-right: 0; }
+    .agent-role { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .agent-symbol { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid currentColor; border-radius: 50%; font: 500 12px var(--mono); }
+    .agent:nth-child(1) .agent-symbol { color: var(--green); }
+    .agent:nth-child(2) .agent-symbol { color: var(--blue); }
+    .agent:nth-child(3) .agent-symbol { color: var(--coral); }
+    .agent h3 { margin: 0; font-size: 13px; font-weight: 700; }
+    .agent p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .prototype-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 0 12px; }
+    .tabs { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); background: var(--surface); }
+    .tab { min-height: 40px; padding: 0 15px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; }
+    .tab[aria-selected="true"] { background: var(--ink); color: white; }
+    .prototype-index { color: var(--muted); font: 12px var(--mono); }
+    .concept {
+      --concept-ink: #18342d;
+      --concept-bg: #fbfcf6;
+      --concept-accent: #18634e;
+      --concept-soft: #e6efe7;
+      --concept-display: var(--display);
+      --tile-border: #839991;
+      min-height: 620px;
+      overflow: hidden;
+      border: 1px solid var(--concept-ink);
+      background: var(--concept-bg);
+      color: var(--concept-ink);
+      box-shadow: 7px 8px 0 rgba(23, 42, 39, .12);
+      transition: background-color .25s ease, color .25s ease;
+    }
+    .concept[data-variant="caderno"] { --concept-ink: #202c30; --concept-bg: #fff6e5; --concept-accent: #bd4d36; --concept-soft: #f2e4bf; --tile-border: #8d7560; }
+    .concept[data-variant="acesso"] { --concept-ink: #101a1c; --concept-bg: #f5f7f4; --concept-accent: #164f9f; --concept-soft: #deebf5; --concept-display: var(--sans); --tile-border: #53656b; }
+    .concept-topline { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 0 22px; border-bottom: 1px solid color-mix(in srgb, var(--concept-ink) 24%, transparent); background: color-mix(in srgb, var(--concept-bg) 75%, var(--concept-soft)); }
+    .concept-name { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .concept-index { color: var(--concept-accent); font: 500 11px var(--mono); }
+    .concept-intro { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 20px; padding: 25px 30px 19px; }
+    .concept-intro h2 { margin: 0; font: 600 30px/1.05 var(--concept-display); letter-spacing: 0; }
+    .concept-intro p { max-width: 470px; margin: 0; color: color-mix(in srgb, var(--concept-ink) 68%, transparent); font-size: 13px; line-height: 1.5; }
+    .play-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(240px, .65fr); align-items: stretch; margin: 0 30px 28px; border-top: 1px solid color-mix(in srgb, var(--concept-ink) 22%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--concept-ink) 22%, transparent); }
+    .game-area { min-width: 0; padding: 20px 28px 24px 0; }
+    .side-note { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: 22px 0 24px 25px; border-left: 1px solid color-mix(in srgb, var(--concept-ink) 22%, transparent); }
+    .side-note h3 { margin: 0 0 9px; font: 600 21px/1.1 var(--concept-display); }
+    .side-note p { margin: 0; color: color-mix(in srgb, var(--concept-ink) 72%, transparent); font-size: 13px; line-height: 1.55; }
+    .side-note .note-small { margin-top: 15px; font-size: 12px; }
+    .note-mark { display: flex; align-items: center; gap: 10px; margin-top: 22px; color: var(--concept-accent); font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .note-mark::before { width: 24px; height: 2px; background: currentColor; content: ""; }
+    .game-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .mode-switch { display: inline-flex; gap: 3px; padding: 3px; background: var(--concept-soft); }
+    .mode-button { min-height: 31px; padding: 0 10px; border: 0; background: transparent; color: var(--concept-ink); cursor: pointer; font-size: 12px; font-weight: 600; }
+    .mode-button[aria-pressed="true"] { background: var(--concept-ink); color: var(--concept-bg); }
+    .game-date { color: color-mix(in srgb, var(--concept-ink) 68%, transparent); font: 11px var(--mono); text-align: right; }
+    .puzzle-facts { display: flex; flex-wrap: wrap; gap: 7px 18px; margin-bottom: 16px; color: color-mix(in srgb, var(--concept-ink) 72%, transparent); font-size: 12px; }
+    .puzzle-facts strong { color: var(--concept-ink); font-weight: 700; }
+    .board { display: grid; justify-content: center; gap: 6px; width: 100%; }
+    .guess-row { display: grid; justify-content: center; gap: 6px; }
+    .tile { position: relative; display: grid; place-items: center; width: var(--tile-size, 42px); aspect-ratio: 1; border: 1px solid var(--tile-border); background: color-mix(in srgb, var(--concept-bg) 90%, white); font: 600 20px var(--mono); text-transform: uppercase; }
+    .tile.filled { border-width: 2px; border-color: var(--concept-ink); }
+    .tile.correct { border-color: #174c3b; background: #d2eadc; color: #103d30; }
+    .tile.present { border-color: #8a3b29; background: #f4d4bd; color: #52271b; }
+    .tile.absent { border-color: #606a69; background: #dfe3df; color: #293532; }
+    .tile-mark { position: absolute; right: 3px; bottom: 0; font: 700 9px/1 var(--sans); }
+    .tile.correct .tile-mark::after { content: "✓"; }
+    .tile.present .tile-mark::after { content: "↔"; }
+    .tile.absent .tile-mark::after { content: "×"; }
+    .concept[data-variant="caderno"] .tile { border-radius: 9px 3px 9px 3px; }
+    .concept[data-variant="caderno"] .tile.correct { background: #d6e3a5; }
+    .concept[data-variant="caderno"] .tile.present { background: #f1b99f; }
+    .concept[data-variant="acesso"] .tile { border-width: 2px; font-weight: 700; }
+    .concept[data-variant="acesso"] .tile.correct { background: #d6ecdf; border-style: double; border-width: 4px; }
+    .concept[data-variant="acesso"] .tile.present { background: #f8ddc7; border-style: dashed; }
+    .concept[data-variant="acesso"] .tile.absent { background: #e2e5e5; text-decoration: line-through; }
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 13px 0 15px; color: color-mix(in srgb, var(--concept-ink) 78%, transparent); font-size: 11px; }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend b { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid currentColor; font: 700 11px var(--sans); }
+    .legend .legend-correct { color: #174c3b; }
+    .legend .legend-present { color: #8a3b29; }
+    .legend .legend-absent { color: #394542; }
+    .entry-form { display: flex; justify-content: center; gap: 8px; max-width: 420px; margin: 0 auto; }
+    .guess-input { width: min(100%, 270px); min-width: 0; height: 43px; padding: 0 12px; border: 1px solid var(--tile-border); border-radius: 0; background: var(--concept-bg); color: var(--concept-ink); font: 500 15px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .guess-input::placeholder { color: #63706d; font-size: 11px; letter-spacing: 0; }
+    .submit-button, .next-button { min-height: 43px; padding: 0 15px; border: 0; background: var(--concept-accent); color: white; cursor: pointer; font-size: 13px; font-weight: 700; }
+    .submit-button:hover, .next-button:hover { filter: brightness(.9); }
+    .virtual-keyboard { display: grid; gap: 6px; width: min(100%, 420px); margin: 12px auto 0; }
+    .key-row { display: flex; justify-content: center; gap: 4px; }
+    .key { min-width: 0; width: 8.9%; min-height: 34px; padding: 0 2px; border: 1px solid color-mix(in srgb, var(--concept-ink) 24%, transparent); background: var(--concept-soft); color: var(--concept-ink); cursor: pointer; font: 600 11px var(--mono); }
+    .key:hover { background: color-mix(in srgb, var(--concept-soft) 70%, var(--concept-accent)); }
+    .key-wide { width: 15%; font: 600 10px var(--sans); }
+    .key:disabled { opacity: .48; cursor: not-allowed; }
+    .status-line { min-height: 24px; margin: 9px auto 0; color: var(--concept-ink); font-size: 12px; text-align: center; }
+    .answer-card { display: none; max-width: 420px; margin: 18px auto 0; padding: 14px 16px; border-left: 4px solid var(--concept-accent); background: var(--concept-soft); }
+    .answer-card.visible { display: block; }
+    .answer-label { display: block; margin-bottom: 3px; color: var(--concept-accent); font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .answer-word { margin: 0 0 5px; font: 600 23px var(--concept-display); }
+    .answer-definition, .answer-example { margin: 0; font-size: 12px; line-height: 1.5; }
+    .answer-example { margin-top: 5px; color: var(--muted); font-style: italic; }
+    .next-button { display: none; margin: 10px auto 0; }
+    .next-button.visible { display: block; }
+    .design-note { display: flex; align-items: start; gap: 11px; padding: 13px 15px; border-top: 1px solid color-mix(in srgb, var(--concept-ink) 18%, transparent); color: color-mix(in srgb, var(--concept-ink) 78%, transparent); font-size: 11px; line-height: 1.5; }
+    .design-note strong { flex: 0 0 auto; color: var(--concept-accent); font: 500 10px var(--mono); text-transform: uppercase; }
+    .prototype-footer { display: flex; justify-content: space-between; gap: 20px; padding: 14px 30px 18px; color: color-mix(in srgb, var(--concept-ink) 70%, transparent); font-size: 11px; }
+    .prototype-footer span:last-child { font-family: var(--mono); text-align: right; }
+    .concept[data-variant="caderno"] .concept-intro { grid-template-columns: 1fr; }
+    .concept[data-variant="caderno"] .concept-intro h2 { font-size: 35px; }
+    .concept[data-variant="caderno"] .play-layout { grid-template-columns: minmax(0, 1fr) 275px; }
+    .concept[data-variant="caderno"] .side-note { border-left: 3px solid var(--concept-accent); }
+    .concept[data-variant="caderno"] .concept-topline { background: #f2dc9a; }
+    .concept[data-variant="acesso"] .concept-topline { background: #e1ebf1; }
+    .concept[data-variant="acesso"] .concept-intro { padding-bottom: 23px; }
+    .concept[data-variant="acesso"] .concept-intro h2 { font: 700 28px/1.1 var(--sans); }
+    .concept[data-variant="acesso"] .play-layout { grid-template-columns: minmax(0, 1fr) 250px; }
+    .concept[data-variant="acesso"] .side-note { border-left: 2px dashed var(--concept-ink); }
+    .closing-note { display: flex; justify-content: space-between; gap: 20px; margin-top: 19px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .closing-note p { max-width: 620px; margin: 0; }
+    .closing-note strong { color: var(--ink); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (max-width: 760px) {
+      .page-shell { width: min(100% - 28px, 620px); }
+      main { padding-top: 24px; }
+      .topbar { min-height: 60px; }
+      .intro { display: block; }
+      .intro-copy { margin-top: 11px; }
+      .council { padding: 15px; }
+      .council-head { align-items: start; flex-direction: column; gap: 5px; }
+      .agent-grid { grid-template-columns: 1fr; }
+      .agent, .agent:first-child, .agent:last-child { padding: 11px 0; border: 0; border-top: 1px solid var(--line); }
+      .agent:first-child { border-top: 0; }
+      .prototype-controls { align-items: start; flex-direction: column; gap: 8px; }
+      .tabs { width: 100%; gap: 3px; }
+      .tab { flex: 1; padding: 0 6px; font-size: 12px; }
+      .concept { min-height: 0; }
+      .concept-topline { min-height: 40px; padding: 0 14px; }
+      .concept-intro { grid-template-columns: 1fr; gap: 8px; padding: 20px 16px 15px; }
+      .concept-intro h2 { font-size: 27px; }
+      .play-layout, .concept[data-variant="caderno"] .play-layout, .concept[data-variant="acesso"] .play-layout { grid-template-columns: 1fr; margin: 0 16px 18px; }
+      .game-area { padding: 15px 0 18px; }
+      .side-note, .concept[data-variant="caderno"] .side-note, .concept[data-variant="acesso"] .side-note { padding: 16px 0 17px; border-top: 1px solid color-mix(in srgb, var(--concept-ink) 22%, transparent); border-left: 0; }
+      .side-note h3 { font-size: 19px; }
+      .side-note .note-small { margin-top: 7px; }
+      .note-mark { margin-top: 12px; }
+      .prototype-footer { padding: 12px 16px 15px; }
+      .closing-note { display: block; }
+      .closing-note p + p { margin-top: 7px; }
+    }
+    @media (max-width: 390px) {
+      .page-shell { width: calc(100% - 22px); }
+      .top-note { max-width: 145px; text-align: right; font-size: 11px; }
+      .game-top { align-items: start; flex-direction: column; }
+      .game-date { text-align: left; }
+      .entry-form { gap: 5px; }
+      .guess-input { padding: 0 8px; }
+      .submit-button { padding: 0 10px; }
+      .key { min-height: 32px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o jogo</a>
+  <header class="topbar page-shell">
+    <a class="brand" href="#topo" aria-label="Palavra, início"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>palavra</a>
+    <span class="top-note">Laboratório de produto · rascunho interativo</span>
+  </header>
+  <main id="conteudo" class="page-shell">
+    <section class="intro" id="topo" aria-labelledby="titulo-principal">
+      <div><p class="eyebrow">Um jogo, três leituras de interface</p><h1 id="titulo-principal">Palavras que ficam.</h1></div>
+      <p class="intro-copy">Um desafio diário em português, gratuito e sem cadastro. Três especialistas alinharam a experiência antes de desenhar caminhos visuais diferentes.</p>
+    </section>
+    <section class="council" aria-labelledby="titulo-conselho">
+      <div class="council-head"><h2 id="titulo-conselho">Painel de agentes</h2><span class="consensus">Consenso: jogo direto, sem anúncios, sem conta</span></div>
+      <div class="agent-grid">
+        <article class="agent"><div class="agent-role"><span class="agent-symbol" aria-hidden="true">U</span><h3>UX design</h3></div><p>Uma ação principal por vez. Diário e infinito ficam separados para não misturar resultados.</p></article>
+        <article class="agent"><div class="agent-role"><span class="agent-symbol" aria-hidden="true">A</span><h3>Acessibilidade web</h3></div><p>As pistas combinam cor, símbolo e texto; teclado físico e foco visível são parte do jogo.</p></article>
+        <article class="agent"><div class="agent-role"><span class="agent-symbol" aria-hidden="true">V</span><h3>Design visual</h3></div><p>Três linguagens próprias: ritual editorial, caderno de vocabulário e alto contraste.</p></article>
+      </div>
+    </section>
+    <section class="prototype-controls" aria-label="Selecionar protótipo">
+      <div class="tabs" role="tablist" aria-label="Conceitos de interface">
+        <button class="tab" id="tab-ritual" type="button" role="tab" aria-selected="true" aria-controls="mockup" data-variant="ritual">01 · Ritual</button>
+        <button class="tab" id="tab-caderno" type="button" role="tab" aria-selected="false" aria-controls="mockup" tabindex="-1" data-variant="caderno">02 · Caderno</button>
+        <button class="tab" id="tab-acesso" type="button" role="tab" aria-selected="false" aria-controls="mockup" tabindex="-1" data-variant="acesso">03 · Acesso</button>
+      </div>
+      <span class="prototype-index" id="variant-caption">CONCEITO 01 / 03</span>
+    </section>
+    <section class="concept" id="mockup" data-variant="ritual" role="tabpanel" aria-labelledby="tab-ritual">
+      <div class="concept-topline"><span class="concept-name" id="concept-name">Estúdio Palavra · edição diária</span><span class="concept-index" id="concept-tag">01 — RITUAL</span></div>
+      <header class="concept-intro"><h2 id="concept-title">Uma pausa. Uma palavra.</h2><p id="concept-description">Um desafio curto e claro para entrar na rotina sem pedir mais tempo do que precisa.</p></header>
+      <div class="play-layout">
+        <section class="game-area" aria-label="Jogo demonstrativo">
+          <div class="game-top">
+            <div class="mode-switch" role="group" aria-label="Modo de jogo"><button type="button" class="mode-button" id="daily-mode" aria-pressed="true">Palavra do dia</button><button type="button" class="mode-button" id="infinite-mode" aria-pressed="false">Infinito</button></div>
+            <span class="game-date" id="game-date"></span>
+          </div>
+          <div class="puzzle-facts" id="puzzle-facts"></div>
+          <div class="board" id="board" aria-label="Tentativas"></div>
+          <div class="legend" aria-label="Legenda das pistas"><span><b class="legend-correct" aria-hidden="true">✓</b> no lugar</span><span><b class="legend-present" aria-hidden="true">↔</b> em outra posição</span><span><b class="legend-absent" aria-hidden="true">×</b> não aparece</span></div>
+          <form class="entry-form" id="guess-form" novalidate>
+            <label class="sr-only" for="guess-input">Digite seu palpite</label>
+            <input class="guess-input" id="guess-input" name="palpite" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Digite sua palavra" aria-describedby="status-line">
+            <button class="submit-button" type="submit">Enviar</button>
+          </form>
+          <div class="virtual-keyboard" id="virtual-keyboard" aria-label="Teclado virtual"></div>
+          <p class="status-line" id="status-line" role="status" aria-live="polite">Digite uma palavra para começar.</p>
+          <section class="answer-card" id="answer-card" aria-live="polite" aria-label="Aprendizado da palavra"><span class="answer-label" id="answer-label">Palavra revelada</span><h3 class="answer-word" id="answer-word"></h3><p class="answer-definition" id="answer-definition"></p><p class="answer-example" id="answer-example"></p></section>
+          <button class="next-button" id="next-round" type="button">Sortear outra palavra</button>
+        </section>
+        <aside class="side-note" aria-labelledby="side-title"><div><p class="section-kicker" id="side-kicker">A proposta</p><h3 id="side-title">Seu momento de foco.</h3><p id="side-copy">Uma rodada por dia. As letras mostram o caminho; o resto é raciocínio seu.</p><p class="note-small" id="side-small">As tentativas são calculadas pelo tamanho da palavra: teto de letras × 1,1.</p></div><span class="note-mark" id="side-mark">Sem pressa, sem conta</span></aside>
+      </div>
+      <div class="design-note"><strong>Decisão de produto</strong><span id="design-note-copy">O desafio do dia é o primeiro plano. A interface guarda espaço para aprender sem adicionar etapas à partida.</span></div>
+      <footer class="prototype-footer"><span>As respostas e o progresso diário ficam neste navegador.</span><span>DEMO · PALAVRAS PT-BR</span></footer>
+    </section>
+    <div class="closing-note"><p><strong>Nota de protótipo:</strong> as palavras e definições demonstram o fluxo. Uma versão de produção precisa de uma lista revisada e de um calendário diário editorial.</p><p id="local-save-note">Sem login · sem anúncios · progresso local</p></div>
+  </main>
+  <script>
+    const puzzles = [
+      { word: "TRAMA", definition: "Conjunto de fios entrelaçados; também, sequência de acontecimentos de uma história.", example: "A trama do livro prende a atenção desde o início." },
+      { word: "IDEIA", definition: "Representação mental de algo; pensamento ou propósito.", example: "Ela teve uma ideia para resolver o desafio." },
+      { word: "PÉROLA", definition: "Pequena esfera brilhante formada dentro de certos moluscos.", example: "A pérola refletia a luz com delicadeza." },
+      { word: "JARDIM", definition: "Terreno onde se cultivam plantas, flores ou árvores.", example: "O jardim ficou cheio de borboletas." },
+      { word: "BRILHO", definition: "Luz intensa refletida ou emitida por algo.", example: "O brilho da estrela chamou atenção." },
+      { word: "FOLHAS", definition: "Partes geralmente verdes das plantas; plural de folha.", example: "As folhas dançavam com o vento." },
+      { word: "AMIGOS", definition: "Pessoas unidas por afeição, estima ou convivência.", example: "Os amigos se reuniram para jogar." },
+      { word: "NÚVENS", definition: "Massas visíveis de gotículas de água suspensas no céu.", example: "As nuvens cobriram o horizonte." },
+      { word: "CADERNO", definition: "Conjunto de folhas reunidas para escrever ou desenhar.", example: "Anotei a palavra nova no caderno." },
+      { word: "AMIZADE", definition: "Relação de afeto, confiança e estima entre pessoas.", example: "A amizade deles atravessou muitos anos." },
+      { word: "PALAVRA", definition: "Unidade da língua formada por sons ou letras e portadora de sentido.", example: "Uma palavra pode abrir uma conversa." },
+      { word: "ESTRELAS", definition: "Astros que emitem luz própria; plural de estrela.", example: "Vimos as estrelas depois do anoitecer." },
+      { word: "APRENDER", definition: "Adquirir conhecimento, habilidade ou experiência.", example: "É possível aprender brincando." },
+      { word: "DESCOBRIR", definition: "Encontrar algo que estava oculto ou era desconhecido.", example: "Ela conseguiu descobrir a resposta." }
+    ];
+    const acceptedWords = new Set(puzzles.map((item) => normalize(item.word)));
+    ["CANTAR", "PINTAR", "MUNDO", "VENTO", "PEDRAS", "SABER", "FUTURO", "ESCOLA", "CULTURA", "LEITURA", "MÚSICA", "MUSICA", "FLORES", "CAMINHO", "CAMINHOS", "CORAGEM", "NATUREZA", "CORAÇÃO", "CORACAO", "PESSOAS", "DESENHO", "ALEGRIA", "VIAGEM", "CIDADE", "PAISAGEM", "HISTÓRIA", "HISTORIA", "CIÊNCIA", "CIENCIA"].forEach((word) => acceptedWords.add(normalize(word)));
+    const concepts = {
+      ritual: { number: "01", name: "Estúdio Palavra · edição diária", tag: "01 — RITUAL", title: "Uma pausa. Uma palavra.", description: "Um desafio curto e claro para entrar na rotina sem pedir mais tempo do que precisa.", kicker: "A proposta", sideTitle: "Seu momento de foco.", sideCopy: "Uma rodada por dia. As letras mostram o caminho; o resto é raciocínio seu.", sideSmall: "As tentativas são calculadas pelo tamanho da palavra: teto de letras × 1,1.", mark: "Sem pressa, sem conta", decision: "O desafio do dia é o primeiro plano. A interface guarda espaço para aprender sem adicionar etapas à partida." },
+      caderno: { number: "02", name: "Caderno de palavras · edição diária", tag: "02 — CADERNO", title: "Jogue. Descubra. Aprenda.", description: "Uma partida com espaço para a palavra continuar fazendo sentido depois que o jogo termina.", kicker: "Depois da rodada", sideTitle: "A resposta vira repertório.", sideCopy: "Ao concluir, a grafia correta aparece junto de uma definição curta e uma frase de exemplo.", sideSmall: "Sem interromper a partida com explicações ou pistas que entreguem a resposta.", mark: "Vocabulário em contexto", decision: "Aprendizado aparece no momento certo: depois da descoberta, com grafia acentuada, significado e exemplo." },
+      acesso: { number: "03", name: "Palavra clara · edição diária", tag: "03 — ACESSO", title: "Pistas claras para todo mundo.", description: "Contraste, símbolos e uma ordem previsível fazem as pistas funcionarem sem depender só das cores.", kicker: "Acessibilidade", sideTitle: "A cor nunca fala sozinha.", sideCopy: "Cada estado tem símbolo e descrição. O jogo também aceita teclado físico, com foco visível.", sideSmall: "As mensagens anunciam a tentativa e o número de chances restantes para leitores de tela.", mark: "Teclado · leitor de tela", decision: "As pistas combinam cor, símbolo e texto. A rodada não depende de visão cromática ou animação para ser compreendida." }
+    };
+    const alphabetRows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+    const state = { mode: "diario", puzzle: null, guesses: [], finished: false };
+    const ui = {
+      mockup: document.querySelector("#mockup"), tabs: [...document.querySelectorAll(".tab")], variantCaption: document.querySelector("#variant-caption"),
+      board: document.querySelector("#board"), facts: document.querySelector("#puzzle-facts"), date: document.querySelector("#game-date"),
+      input: document.querySelector("#guess-input"), form: document.querySelector("#guess-form"), status: document.querySelector("#status-line"),
+      keyboard: document.querySelector("#virtual-keyboard"), answerCard: document.querySelector("#answer-card"), answerWord: document.querySelector("#answer-word"),
+      answerDefinition: document.querySelector("#answer-definition"), answerExample: document.querySelector("#answer-example"), answerLabel: document.querySelector("#answer-label"),
+      nextRound: document.querySelector("#next-round"), dailyMode: document.querySelector("#daily-mode"), infiniteMode: document.querySelector("#infinite-mode")
+    };
+    function normalize(value) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleUpperCase("pt-BR").replace(/[^A-Z]/g, ""); }
+    function dateKey() { return new Date().toISOString().slice(0, 10); }
+    function getDailyPuzzle() {
+      const day = Math.floor(Date.now() / 86400000);
+      return puzzles[((day % puzzles.length) + puzzles.length) % puzzles.length];
+    }
+    function attemptsAllowed() { return Math.ceil(Array.from(normalize(state.puzzle.word)).length * 1.1); }
+    function storageKey() { return `palavra-diaria-${dateKey()}`; }
+    function loadDailyProgress() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey()) || "null");
+        if (saved && Array.isArray(saved.guesses)) {
+          state.guesses = saved.guesses.filter((guess) => typeof guess === "string").slice(0, attemptsAllowed());
+          state.finished = Boolean(saved.finished);
+        }
+      } catch { state.guesses = []; state.finished = false; }
+    }
+    function saveDailyProgress() {
+      if (state.mode !== "diario") return;
+      try { localStorage.setItem(storageKey(), JSON.stringify({ guesses: state.guesses, finished: state.finished })); }
+      catch { /* O jogo continua funcionando sem armazenamento local. */ }
+    }
+    function choosePuzzle(mode) {
+      state.mode = mode;
+      state.puzzle = mode === "diario" ? getDailyPuzzle() : puzzles[Math.floor(Math.random() * puzzles.length)];
+      state.guesses = [];
+      state.finished = false;
+      if (mode === "diario") loadDailyProgress();
+      ui.input.value = "";
+      ui.status.textContent = mode === "diario" ? "Digite uma palavra para começar." : "Rodada independente. Digite sua primeira palavra.";
+      render();
+    }
+    function evaluate(guess, answer) {
+      const letters = Array.from(guess);
+      const target = Array.from(answer);
+      const result = Array(letters.length).fill("absent");
+      const remaining = {};
+      target.forEach((letter, index) => {
+        if (letters[index] === letter) result[index] = "correct";
+        else remaining[letter] = (remaining[letter] || 0) + 1;
+      });
+      letters.forEach((letter, index) => {
+        if (result[index] === "correct") return;
+        if (remaining[letter] > 0) { result[index] = "present"; remaining[letter] -= 1; }
+      });
+      return result;
+    }
+    function resultDescription(result) { return result.map((kind) => kind === "correct" ? "no lugar certo" : kind === "present" ? "em outra posição" : "não aparece na palavra").join("; "); }
+    function setTileSize() {
+      if (!state.puzzle) return;
+      const letters = Array.from(normalize(state.puzzle.word)).length;
+      const available = ui.board.clientWidth;
+      const size = Math.min(52, Math.max(24, Math.floor((available - (letters - 1) * 6) / letters)));
+      ui.board.style.setProperty("--tile-size", `${size}px`);
+    }
+    function renderBoard() {
+      const letters = Array.from(normalize(state.puzzle.word)).length;
+      const rows = attemptsAllowed();
+      ui.board.replaceChildren();
+      ui.board.setAttribute("aria-label", `Tabuleiro com ${rows} tentativas e ${letters} letras por palavra`);
+      for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
+        const row = document.createElement("div");
+        row.className = "guess-row";
+        row.style.gridTemplateColumns = `repeat(${letters}, var(--tile-size, 42px))`;
+        const guess = state.guesses[rowIndex];
+        const result = guess ? evaluate(normalize(guess), normalize(state.puzzle.word)) : [];
+        for (let column = 0; column < letters; column += 1) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          if (guess) {
+            tile.textContent = Array.from(normalize(guess))[column] || "";
+            tile.classList.add(result[column]);
+            const stateName = result[column] === "correct" ? "letra correta na posição" : result[column] === "present" ? "letra presente em outra posição" : "letra ausente";
+            tile.setAttribute("aria-label", `${tile.textContent}, ${stateName}`);
+            const mark = document.createElement("span"); mark.className = "tile-mark"; mark.setAttribute("aria-hidden", "true"); tile.append(mark);
+          } else {
+            const activeRow = rowIndex === state.guesses.length && !state.finished;
+            const draft = activeRow ? Array.from(ui.input.value) : [];
+            tile.textContent = draft[column] || "";
+            if (tile.textContent) tile.classList.add("filled");
+            tile.setAttribute("aria-hidden", "true");
+          }
+          row.append(tile);
+        }
+        row.setAttribute("role", "group");
+        row.setAttribute("aria-label", guess ? `Tentativa ${rowIndex + 1}: ${resultDescription(result)}` : `Tentativa ${rowIndex + 1}${rowIndex === state.guesses.length ? ", atual" : ""}`);
+        ui.board.append(row);
+      }
+      requestAnimationFrame(setTileSize);
+    }
+    function renderKeyboard() {
+      ui.keyboard.replaceChildren();
+      alphabetRows.forEach((letters, rowIndex) => {
+        const row = document.createElement("div"); row.className = "key-row";
+        if (rowIndex === 2) {
+          const backspace = document.createElement("button");
+          backspace.type = "button"; backspace.className = "key key-wide"; backspace.textContent = "Apagar"; backspace.setAttribute("aria-label", "Apagar última letra");
+          backspace.addEventListener("click", () => { ui.input.value = ui.input.value.slice(0, -1); renderBoard(); ui.input.focus(); }); row.append(backspace);
+        }
+        Array.from(letters).forEach((letter) => {
+          const key = document.createElement("button"); key.type = "button"; key.className = "key"; key.textContent = letter; key.setAttribute("aria-label", `Inserir letra ${letter}`); key.disabled = state.finished;
+          key.addEventListener("click", () => addLetter(letter)); row.append(key);
+        });
+        if (rowIndex === 2) {
+          const enter = document.createElement("button"); enter.type = "button"; enter.className = "key key-wide"; enter.textContent = "Enviar"; enter.setAttribute("aria-label", "Enviar palpite"); enter.disabled = state.finished;
+          enter.addEventListener("click", () => ui.form.requestSubmit()); row.append(enter);
+        }
+        ui.keyboard.append(row);
+      });
+    }
+    function renderFacts() {
+      const letters = Array.from(normalize(state.puzzle.word)).length;
+      const remaining = Math.max(0, attemptsAllowed() - state.guesses.length);
+      ui.facts.innerHTML = `<span><strong>${letters}</strong> letras</span><span><strong>${remaining}</strong> ${remaining === 1 ? "tentativa restante" : "tentativas restantes"}</span><span>${state.mode === "diario" ? "mesma palavra para todos" : "rodada independente"}</span>`;
+      ui.input.maxLength = letters;
+      ui.input.setAttribute("aria-label", `Digite seu palpite, ${letters} letras`);
+      ui.input.placeholder = `${letters} letras`;
+      ui.date.textContent = state.mode === "diario" ? new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date()) : "MODO INFINITO · SEM PROGRESSO";
+      ui.dailyMode.setAttribute("aria-pressed", String(state.mode === "diario"));
+      ui.infiniteMode.setAttribute("aria-pressed", String(state.mode === "infinito"));
+    }
+    function renderAnswer() {
+      const won = state.guesses.some((guess) => normalize(guess) === normalize(state.puzzle.word));
+      ui.answerCard.classList.toggle("visible", state.finished);
+      ui.nextRound.classList.toggle("visible", state.finished && state.mode === "infinito");
+      if (!state.finished) return;
+      ui.answerLabel.textContent = won ? "Você descobriu" : "Palavra revelada";
+      ui.answerWord.textContent = state.puzzle.word;
+      ui.answerDefinition.textContent = state.puzzle.definition;
+      ui.answerExample.textContent = state.puzzle.example;
+    }
+    function render() { renderFacts(); renderBoard(); renderKeyboard(); renderAnswer(); }
+    function addLetter(letter) {
+      if (state.finished || Array.from(ui.input.value).length >= Array.from(normalize(state.puzzle.word)).length) return;
+      ui.input.value += letter; renderBoard(); ui.input.focus();
+    }
+    function sendGuess(event) {
+      event.preventDefault();
+      if (state.finished) return;
+      const guess = normalize(ui.input.value);
+      const letters = Array.from(normalize(state.puzzle.word)).length;
+      if (Array.from(guess).length !== letters) { ui.status.textContent = `Digite uma palavra com ${letters} letras.`; ui.input.focus(); return; }
+      if (!acceptedWords.has(guess)) { ui.status.textContent = "Essa palavra não está na lista de palpites deste protótipo."; ui.input.focus(); return; }
+      if (state.guesses.some((item) => normalize(item) === guess)) { ui.status.textContent = "Você já usou essa palavra. Tente outra."; ui.input.focus(); return; }
+      state.guesses.push(guess);
+      const won = guess === normalize(state.puzzle.word);
+      state.finished = won || state.guesses.length >= attemptsAllowed();
+      ui.input.value = "";
+      if (won) ui.status.textContent = `Acertou em ${state.guesses.length} ${state.guesses.length === 1 ? "tentativa" : "tentativas"}. A palavra foi revelada com a grafia correta.`;
+      else if (state.finished) ui.status.textContent = `As tentativas acabaram. A resposta é ${state.puzzle.word}.`;
+      else ui.status.textContent = `Palpite ${state.guesses.length} de ${attemptsAllowed()}. ${attemptsAllowed() - state.guesses.length} restantes. ${resultDescription(evaluate(guess, normalize(state.puzzle.word)))}.`;
+      saveDailyProgress(); render();
+    }
+    function showConcept(name, focusTab = false) {
+      const concept = concepts[name];
+      ui.mockup.dataset.variant = name;
+      ui.mockup.setAttribute("aria-labelledby", `tab-${name}`);
+      ui.tabs.forEach((tab) => {
+        const selected = tab.dataset.variant === name;
+        tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1;
+        if (selected && focusTab) tab.focus();
+      });
+      ui.variantCaption.textContent = `CONCEITO ${concept.number} / 03`;
+      document.querySelector("#concept-name").textContent = concept.name;
+      document.querySelector("#concept-tag").textContent = concept.tag;
+      document.querySelector("#concept-title").textContent = concept.title;
+      document.querySelector("#concept-description").textContent = concept.description;
+      document.querySelector("#side-kicker").textContent = concept.kicker;
+      document.querySelector("#side-title").textContent = concept.sideTitle;
+      document.querySelector("#side-copy").textContent = concept.sideCopy;
+      document.querySelector("#side-small").textContent = concept.sideSmall;
+      document.querySelector("#side-mark").textContent = concept.mark;
+      document.querySelector("#design-note-copy").textContent = concept.decision;
+      requestAnimationFrame(setTileSize);
+    }
+    ui.tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => showConcept(tab.dataset.variant));
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        let next = index;
+        if (event.key === "ArrowRight") next = (index + 1) % ui.tabs.length;
+        if (event.key === "ArrowLeft") next = (index - 1 + ui.tabs.length) % ui.tabs.length;
+        if (event.key === "Home") next = 0;
+        if (event.key === "End") next = ui.tabs.length - 1;
+        showConcept(ui.tabs[next].dataset.variant, true);
+      });
+    });
+    ui.dailyMode.addEventListener("click", () => choosePuzzle("diario"));
+    ui.infiniteMode.addEventListener("click", () => choosePuzzle("infinito"));
+    ui.nextRound.addEventListener("click", () => {
+      const previous = state.puzzle;
+      do { state.puzzle = puzzles[Math.floor(Math.random() * puzzles.length)]; } while (puzzles.length > 1 && state.puzzle === previous);
+      state.guesses = []; state.finished = false; ui.input.value = "";
+      ui.status.textContent = "Nova rodada independente. Digite sua primeira palavra."; render(); ui.input.focus();
+    });
+    ui.form.addEventListener("submit", sendGuess);
+    ui.input.addEventListener("input", () => { const normalized = normalize(ui.input.value); if (ui.input.value !== normalized) ui.input.value = normalized; renderBoard(); });
+    ui.input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); ui.form.requestSubmit(); } });
+    window.addEventListener("resize", setTileSize);
+    state.puzzle = getDailyPuzzle();
+    loadDailyProgress();
+    if (state.finished) ui.status.textContent = "Desafio diário concluído neste navegador.";
+    else if (state.guesses.length) ui.status.textContent = `Partida retomada. ${attemptsAllowed() - state.guesses.length} tentativas restantes.`;
+    ui.date.textContent = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date());
+    render();
+  </script>
+</body>
+</html>
