@@ -110,6 +110,18 @@
     .mode-switch { display: inline-flex; gap: 3px; padding: 3px; background: var(--concept-soft); }
     .mode-button { min-height: 31px; padding: 0 10px; border: 0; background: transparent; color: var(--concept-ink); cursor: pointer; font-size: 12px; font-weight: 600; }
     .mode-button[aria-pressed="true"] { background: var(--concept-ink); color: var(--concept-bg); }
+    .dictionary-switch { display: inline-flex; gap: 3px; padding: 3px; background: var(--concept-soft); }
+    .dict-button { min-height: 31px; padding: 0 12px; border: 0; background: transparent; color: var(--concept-ink); cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .dict-button[aria-pressed="true"] { background: var(--concept-accent); color: white; }
+    .dictionary-panel { display: none; margin-top: 14px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--concept-ink) 22%, transparent); background: rgba(255, 255, 255, .55); }
+    .dictionary-panel.visible { display: block; }
+    .dictionary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .dictionary-head strong { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .dictionary-close { border: 0; background: transparent; color: var(--concept-accent); cursor: pointer; font: 600 11px var(--mono); }
+    .dictionary-summary { margin: 0 0 10px; color: color-mix(in srgb, var(--concept-ink) 76%, transparent); font-size: 12px; line-height: 1.5; }
+    .dictionary-counts { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 8px; font: 11px var(--mono); }
+    .dictionary-counts span { display: inline-flex; gap: 5px; padding: 5px 7px; border: 1px solid color-mix(in srgb, var(--concept-ink) 18%, transparent); background: rgba(255,255,255,.45); }
+    .dictionary-list { margin: 0; padding-left: 18px; color: color-mix(in srgb, var(--concept-ink) 75%, transparent); font-size: 12px; line-height: 1.6; }
     .game-date { color: color-mix(in srgb, var(--concept-ink) 68%, transparent); font: 11px var(--mono); text-align: right; }
     .puzzle-facts { display: flex; flex-wrap: wrap; gap: 7px 18px; margin-bottom: 16px; color: color-mix(in srgb, var(--concept-ink) 72%, transparent); font-size: 12px; }
     .puzzle-facts strong { color: var(--concept-ink); font-weight: 700; }
@@ -251,9 +263,19 @@
       <div class="play-layout">
         <section class="game-area" aria-label="Jogo demonstrativo">
           <div class="game-top">
-            <div class="mode-switch" role="group" aria-label="Modo de jogo"><button type="button" class="mode-button" id="daily-mode" aria-pressed="true">Palavra do dia</button><button type="button" class="mode-button" id="infinite-mode" aria-pressed="false">Infinito</button></div>
+            <div>
+              <div class="mode-switch" role="group" aria-label="Modo de jogo"><button type="button" class="mode-button" id="daily-mode" aria-pressed="true">Palavra do dia</button><button type="button" class="mode-button" id="infinite-mode" aria-pressed="false">Infinito</button></div>
+              <div class="dictionary-switch" role="group" aria-label="Tamanho do dicionário" style="margin-top: 8px;"><button type="button" class="dict-button" data-dictionary="leve" aria-pressed="false">Leve</button><button type="button" class="dict-button" data-dictionary="medio" aria-pressed="true">Médio</button><button type="button" class="dict-button" data-dictionary="completa" aria-pressed="false">Completa</button></div>
+              <button type="button" id="toggle-dictionary" class="submit-button" style="margin-top: 10px; min-height: 32px; padding: 0 12px;">Ver dicionário</button>
+            </div>
             <span class="game-date" id="game-date"></span>
           </div>
+          <aside class="dictionary-panel" id="dictionary-panel" aria-live="polite" aria-label="Consulta do dicionário interno">
+            <div class="dictionary-head"><strong>Dicionário interno</strong><button type="button" class="dictionary-close" id="close-dictionary">Fechar</button></div>
+            <p class="dictionary-summary" id="dictionary-summary"></p>
+            <div class="dictionary-counts" id="dictionary-counts"></div>
+            <ul class="dictionary-list" id="dictionary-list"></ul>
+          </aside>
           <div class="puzzle-facts" id="puzzle-facts"></div>
           <div class="board" id="board" aria-label="Tentativas"></div>
           <div class="legend" aria-label="Legenda das pistas"><span><b class="legend-correct" aria-hidden="true">✓</b> no lugar</span><span><b class="legend-present" aria-hidden="true">↔</b> em outra posição</span><span><b class="legend-absent" aria-hidden="true">×</b> não aparece</span></div>
@@ -275,44 +297,186 @@
     <div class="closing-note"><p><strong>Nota de protótipo:</strong> as palavras e definições demonstram o fluxo. Uma versão de produção precisa de uma lista revisada e de um calendário diário editorial.</p><p id="local-save-note">Sem login · sem anúncios · progresso local</p></div>
   </main>
   <script>
-    const puzzles = [
-      { word: "TRAMA", definition: "Conjunto de fios entrelaçados; também, sequência de acontecimentos de uma história.", example: "A trama do livro prende a atenção desde o início." },
-      { word: "IDEIA", definition: "Representação mental de algo; pensamento ou propósito.", example: "Ela teve uma ideia para resolver o desafio." },
-      { word: "PÉROLA", definition: "Pequena esfera brilhante formada dentro de certos moluscos.", example: "A pérola refletia a luz com delicadeza." },
-      { word: "JARDIM", definition: "Terreno onde se cultivam plantas, flores ou árvores.", example: "O jardim ficou cheio de borboletas." },
-      { word: "BRILHO", definition: "Luz intensa refletida ou emitida por algo.", example: "O brilho da estrela chamou atenção." },
-      { word: "FOLHAS", definition: "Partes geralmente verdes das plantas; plural de folha.", example: "As folhas dançavam com o vento." },
-      { word: "AMIGOS", definition: "Pessoas unidas por afeição, estima ou convivência.", example: "Os amigos se reuniram para jogar." },
-      { word: "NÚVENS", definition: "Massas visíveis de gotículas de água suspensas no céu.", example: "As nuvens cobriram o horizonte." },
-      { word: "CADERNO", definition: "Conjunto de folhas reunidas para escrever ou desenhar.", example: "Anotei a palavra nova no caderno." },
-      { word: "AMIZADE", definition: "Relação de afeto, confiança e estima entre pessoas.", example: "A amizade deles atravessou muitos anos." },
-      { word: "PALAVRA", definition: "Unidade da língua formada por sons ou letras e portadora de sentido.", example: "Uma palavra pode abrir uma conversa." },
-      { word: "ESTRELAS", definition: "Astros que emitem luz própria; plural de estrela.", example: "Vimos as estrelas depois do anoitecer." },
-      { word: "APRENDER", definition: "Adquirir conhecimento, habilidade ou experiência.", example: "É possível aprender brincando." },
-      { word: "DESCOBRIR", definition: "Encontrar algo que estava oculto ou era desconhecido.", example: "Ela conseguiu descobrir a resposta." }
-    ];
-    const acceptedWords = new Set(puzzles.map((item) => normalize(item.word)));
-    ["CANTAR", "PINTAR", "MUNDO", "VENTO", "PEDRAS", "SABER", "FUTURO", "ESCOLA", "CULTURA", "LEITURA", "MÚSICA", "MUSICA", "FLORES", "CAMINHO", "CAMINHOS", "CORAGEM", "NATUREZA", "CORAÇÃO", "CORACAO", "PESSOAS", "DESENHO", "ALEGRIA", "VIAGEM", "CIDADE", "PAISAGEM", "HISTÓRIA", "HISTORIA", "CIÊNCIA", "CIENCIA"].forEach((word) => acceptedWords.add(normalize(word)));
+    const wordEntries = {
+      TRAMA: { definition: "Conjunto de fios entrelaçados; também, sequência de acontecimentos de uma história.", example: "A trama do livro prende a atenção desde o início." },
+      IDEIA: { definition: "Representação mental de algo; pensamento ou propósito.", example: "Ela teve uma ideia para resolver o desafio." },
+      PÉROLA: { definition: "Pequena esfera brilhante formada dentro de certos moluscos.", example: "A pérola refletia a luz com delicadeza." },
+      JARDIM: { definition: "Terreno onde se cultivam plantas, flores ou árvores.", example: "O jardim ficou cheio de borboletas." },
+      BRILHO: { definition: "Luz intensa refletida ou emitida por algo.", example: "O brilho da estrela chamou atenção." },
+      FOLHAS: { definition: "Partes geralmente verdes das plantas; plural de folha.", example: "As folhas dançavam com o vento." },
+      AMIGOS: { definition: "Pessoas unidas por afeição, estima ou convivência.", example: "Os amigos se reuniram para jogar." },
+      NÚVENS: { definition: "Massas visíveis de gotículas de água suspensas no céu.", example: "As nuvens cobriram o horizonte." },
+      CADERNO: { definition: "Conjunto de folhas reunidas para escrever ou desenhar.", example: "Anotei a palavra nova no caderno." },
+      AMIZADE: { definition: "Relação de afeto, confiança e estima entre pessoas.", example: "A amizade deles atravessou muitos anos." },
+      PALAVRA: { definition: "Unidade da língua formada por sons ou letras e portadora de sentido.", example: "Uma palavra pode abrir uma conversa." },
+      ESTRELAS: { definition: "Astros que emitem luz própria; plural de estrela.", example: "Vimos as estrelas depois do anoitecer." },
+      APRENDER: { definition: "Adquirir conhecimento, habilidade ou experiência.", example: "É possível aprender brincando." },
+      DESCOBRIR: { definition: "Encontrar algo que estava oculto ou era desconhecido.", example: "Ela conseguiu descobrir a resposta." },
+      ALEGRIA: { definition: "Estado de espírito de felicidade ou contentamento.", example: "A alegria deles era contagiante." },
+      CAMINHO: { definition: "Trajeto percorrido para ir de um lugar a outro.", example: "O caminho até a escola era longo." },
+      CAMINHOS: { definition: "Várias rotas ou trajetos de deslocamento.", example: "Os caminhos mudam conforme a paisagem." },
+      CIDADE: { definition: "Centro urbano com grande concentração de pessoas e serviços.", example: "A cidade acordou cedo com o mercado lotado." },
+      CIÊNCIA: { definition: "Estudo sistemático de fenômenos e conhecimentos organizados.", example: "A ciência ajuda a entender melhor a natureza." },
+      CIENCIA: { definition: "Forma sem acento da palavra ciência.", example: "A ciência também pode aparecer escrita sem acento em textos informais." },
+      CORAGEM: { definition: "Qualidade de agir sem medo ou com determinação.", example: "Foi preciso coragem para continuar." },
+      CORAÇÃO: { definition: "Órgão do corpo humano e também símbolo de afeto.", example: "Ela colocou o coração na proposta." },
+      CORACAO: { definition: "Forma sem acento da palavra coração.", example: "A palavra pode aparecer sem acento em certos contextos." },
+      CULTURA: { definition: "Conjunto de costumes, saberes e manifestações de um povo.", example: "A cultura local enriquece a cidade." },
+      DESENHO: { definition: "Representação gráfica de algo ou expressão artística.", example: "Ele desenhou o mapa na folha em branco." },
+      ESCOLA: { definition: "Instituição voltada para ensino e aprendizagem.", example: "A escola abriu as portas às crianças." },
+      FLORES: { definition: "Plantas com flores, geralmente com beleza e perfume.", example: "As flores do jardim foram plantadas na primavera." },
+      FUTURO: { definition: "Tempo que ainda vai acontecer.", example: "O futuro das pessoas depende das escolhas de hoje." },
+      HISTÓRIA: { definition: "Narrativa de fatos, acontecimentos ou vida das pessoas.", example: "A história daquele bairro é rica." },
+      HISTORIA: { definition: "Forma sem acento da palavra história.", example: "A palavra pode aparecer em textos sem acento gráfico." },
+      LEITURA: { definition: "Ato de ler e interpretar um texto.", example: "A leitura do livro foi divertida." },
+      MÚSICA: { definition: "Arte de combinar sons de forma organizada.", example: "A música animou a festa do fim de semana." },
+      MUSICA: { definition: "Forma sem acento da palavra música.", example: "A grafia sem acento também aparece em alguns contextos." },
+      NATUREZA: { definition: "Conjunto dos seres vivos e dos elementos do mundo natural.", example: "A natureza do parque está preservada." },
+      PAISAGEM: { definition: "Aspecto visual de um lugar, com elementos da natureza e do ambiente.", example: "A paisagem ao pôr do sol era linda." },
+      PEDRAS: { definition: "Plural de pedra; fragmentos sólidos da natureza.", example: "As pedras do caminho estavam molhadas." },
+      PESSOAS: { definition: "Plural de pessoa; seres humanos.", example: "As pessoas se reuniram para o encontro." },
+      PINTAR: { definition: "Aplicar tinta ou cores sobre uma superfície.", example: "Ela gosta de pintar paisagens em aquarela." },
+      SABER: { definition: "Ter conhecimento ou capacidade de conhecer.", example: "É bom saber ouvir antes de responder." },
+      VENTO: { definition: "Movimento do ar em velocidade e direção variáveis.", example: "O vento sacudia as folhas da árvore." },
+      VIAGEM: { definition: "Deslocamento de um lugar para outro, geralmente distante.", example: "A viagem de volta foi tranquila." },
+      MUNDO: { definition: "Conjunto de tudo que existe; também, o planeta Terra.", example: "O mundo é grande e cheio de histórias." },
+      FLORESTA: { definition: "Grande extensão de árvores e vegetação natural.", example: "A floresta oferece abrigo para muitas espécies." },
+      VITÓRIA: { definition: "Sucesso em uma disputa ou conquista desejada.", example: "A vitória veio após muito esforço." },
+      VITORIA: { definition: "Forma sem acento da palavra vitória.", example: "Em alguns contextos, a grafia sem acento também aparece." },
+      GESTO: { definition: "Movimento do corpo para expressar algo ou comunicar uma ideia.", example: "O gesto foi simples, mas significativo." },
+      LIÇÃO: { definition: "Ensino ou mensagem que se aprende com uma experiência.", example: "A lição do dia foi atenção e paciência." },
+      SONHO: { definition: "Imagem mental figurada produzida durante o sono ou desejo intenso.", example: "O sonho dela era viajar pelo mundo." },
+      TÉCNICA: { definition: "Conjunto de métodos ou habilidades para realizar algo.", example: "A técnica do projeto foi bem pensada." },
+      TECNICA: { definition: "Forma sem acento da palavra técnica.", example: "A grafia sem acento também é usada em textos informais." },
+      IMAGEM: { definition: "Representação visual de alguma coisa.", example: "A imagem do pôr do sol ficou bela." },
+      MENSAGEM: { definition: "Conteúdo transmitido por fala, escrita ou sinal.", example: "A mensagem chegou no momento certo." },
+      CONHECER: { definition: "Ter contato, saber ou aprender a respeito de algo ou alguém.", example: "Vamos conhecer melhor a cidade juntos." },
+      FALANDO: { definition: "Forma verbal de apresentar uma ação de falar.", example: "Ela estava falando sobre o projeto." },
+      CANTAR: { definition: "Produzir música com a voz.", example: "Eles gostam de cantar juntos no fim da tarde." },
+      PINTAR: { definition: "Aplicar cores para transformar uma superfície visualmente.", example: "Ela decidiu pintar as paredes de verde." },
+      VENTO: { definition: "Movimento do ar em velocidade e direção variáveis.", example: "O vento fez as bandeiras balançarem." },
+      PEDRAS: { definition: "Plural de pedra; fragmentos sólidos da natureza.", example: "As pedras do caminho eram muito lisas." },
+      SABER: { definition: "Ter conhecimento sobre algo ou alguém.", example: "Preciso saber a resposta antes de falar." },
+      ESCOLA: { definition: "Espaço de ensino e aprendizado.", example: "A escola abriu para a turma de manhã." },
+      LEITURA: { definition: "Ato de ler e interpretar um texto.", example: "A leitura do capítulo foi breve e rica." }
+    };
+    const MIN_WORD_LENGTH = 3;
+    const MAX_WORD_LENGTH = 9;
+    function buildDictionaryProfile(profile) {
+      return {
+        label: profile.label,
+        words: [...new Set(profile.words.map((word) => normalize(word)).filter((word) => word.length >= MIN_WORD_LENGTH && word.length <= MAX_WORD_LENGTH))]
+      };
+    }
+    const dictionaryProfiles = {
+      leve: buildDictionaryProfile({
+        label: "Leve",
+        words: ["AMOR", "ARCO", "BOLA", "CASA", "DIA", "FOGO", "LUZ", "MESA", "NOVA", "PESO", "RUA", "VIDA", "VIVO", "MUNDO", "ARTE", "BRISA", "CANTO", "DENTE", "FELIZ", "IDEIA", "LIVRO", "PAPEL", "SABER", "TEXTO", "TRAMA", "VIAJE", "ZEBRA", "AMIGO", "FUTURO", "CAMINHO", "PESSOAS", "VENTO", "PINTAR", "LEITURA", "JARDIM", "BRILHO", "PALAVRA", "AMIZADE", "ALEGRIA", "CIDADE", "CORAGEM", "DESCOBRIR", "FLORES", "HISTORIA", "NATUREZA", "PAISAGEM", "VIAGEM", "PÉROLA", "MÚSICA", "CADERNO", "ESTRELAS", "DESENHO", "ESCOLA", "CULTURA", "CONHECER", "MENSAGEM", "ACERTO", "GENTE", "LISURA", "RAPIDEZ", "VITÓRIA"]
+      }),
+      medio: buildDictionaryProfile({
+        label: "Médio",
+        words: ["AMOR", "ARCO", "BOLA", "CASA", "DIA", "FOGO", "LUZ", "MESA", "NOVA", "PESO", "RUA", "VIDA", "VIVO", "MUNDO", "ARTE", "BRISA", "CANTO", "DENTE", "FELIZ", "IDEIA", "LIVRO", "PAPEL", "SABER", "TEXTO", "TRAMA", "VIAJE", "ZEBRA", "AMIGO", "FUTURO", "CAMINHO", "PESSOAS", "VENTO", "PINTAR", "LEITURA", "JARDIM", "BRILHO", "PALAVRA", "AMIZADE", "ALEGRIA", "CIDADE", "CORAGEM", "DESCOBRIR", "FLORES", "HISTORIA", "NATUREZA", "PAISAGEM", "VIAGEM", "PÉROLA", "MÚSICA", "CADERNO", "ESTRELAS", "DESENHO", "ESCOLA", "CULTURA", "CONHECER", "MENSAGEM", "AMARELO", "BIBLIOTECA", "FLORESTA", "HARMONIA", "JORNAL", "LIDERANCA", "OPORTUNIDADE", "PERSISTENCIA", "SENSIBILIDADE", "TÉCNICA", "VITÓRIA", "ABRILHO", "CRESCER", "GARRAFA", "INSPIRAR", "QUERER", "RITMO", "SILENCIO", "SONHO", "TRANSFORMAR", "VOCABULO", "ALFABETO", "NAVEGAR", "LUMINOSO", "CURIOSO", "PROXIMO", "CAMPANHA", "PAPELAO", "CRESCENTE", "PONTE", "ESTUDO", "REFLEXO", "EXPLORAR", "PENSAR", "PONTUAL", "MEMORIA", "COTIDIANO", "RITUAL", "ESLABAO", "SUCESSO", "JOGAR", "CONFIANCA", "ENTENDER", "PRAZER", "SENTIR", "COLETIVO", "ORQUESTA", "PERFUME", "MELHORIA", "IDEAL", "ESTRADA"]
+      }),
+      completa: buildDictionaryProfile({
+        label: "Completa",
+        words: ["AMOR", "ARCO", "BOLA", "CASA", "DIA", "FOGO", "LUZ", "MESA", "NOVA", "PESO", "RUA", "VIDA", "VIVO", "MUNDO", "ARTE", "BRISA", "CANTO", "DENTE", "FELIZ", "IDEIA", "LIVRO", "PAPEL", "SABER", "TEXTO", "TRAMA", "VIAJE", "ZEBRA", "AMIGO", "FUTURO", "CAMINHO", "PESSOAS", "VENTO", "PINTAR", "LEITURA", "JARDIM", "BRILHO", "PALAVRA", "AMIZADE", "ALEGRIA", "CIDADE", "CORAGEM", "DESCOBRIR", "FLORES", "HISTORIA", "NATUREZA", "PAISAGEM", "VIAGEM", "PÉROLA", "MÚSICA", "CADERNO", "ESTRELAS", "DESENHO", "ESCOLA", "CULTURA", "CONHECER", "MENSAGEM", "AMARELO", "BIBLIOTECA", "FLORESTA", "ACESSO", "HARMONIA", "INTENCAO", "JORNAL", "LIDERANCA", "OPORTUNIDADE", "PERSISTENCIA", "SENSIBILIDADE", "TÉCNICA", "VITÓRIA", "ABRILHO", "CRESCER", "GARRAFA", "INSPIRAR", "QUERER", "RITMO", "SILENCIO", "SONHO", "TRANSFORMAR", "VOCABULO", "ALFABETO", "NAVEGAR", "LUMINOSO", "CURIOSO", "PROXIMO", "CAMPANHA", "PAPELAO", "CRESCENTE", "PONTE", "ESTUDO", "REFLEXO", "EXPLORAR", "PENSAR", "PONTUAL", "MEMORIA", "COTIDIANO", "RITUAL", "ESLABAO", "SUCESSO", "JOGAR", "CONFIANCA", "ENTENDER", "PRAZER", "SENTIR", "COLETIVO", "ORQUESTA", "PERFUME", "MELHORIA", "IDEAL", "ESTRADA", "PALESTRA", "PONDERAR", "DESAFIO", "SIMETRIA", "MIRANTE", "HORIZONTE", "QUIMICA", "CIRCUITO", "RACIONAL", "QUESTIONAR", "MATERIAL", "VISUAL", "PERCURSO", "MOTIVAR", "PLANEJAR", "DIALOGO", "FUNDAMENTAL", "TALENTO", "IMAGENS", "MENSAGEM", "ESPERANCA", "TRILHA", "ATIVIDADE", "BEMESTAR", "AFETO", "IDENTIDADE", "INTELIGENTE", "SEQUENCIA", "COMPASSO", "EXPERIENCIA", "DESCOBERTA", "VIBRACAO", "MOVIMENTO", "MEDITAR", "INOVACAO", "CONCEPCAO", "ARQUITECTO", "EDUCACAO"]
+      })
+    };
+    const leveAdditions = ["AGUA", "ALMA", "ALVO", "ANEL", "AREIA", "BAILE", "BANHO", "BARCO", "BEBER", "BEIJO", "BICHO", "BOLSA", "BRAVO", "CAIXA", "CALMA", "CAMPO", "CAPAZ", "CARRO", "CHAVE", "CHUVA", "CINTO", "CLARO", "CLIMA", "COBRA", "COISA", "CONTA", "CORPO", "DANCA", "DOCE", "ERVA", "FAROL", "FESTA", "FOLHA", "FORMA", "FRUTA", "GRAMA", "GRUPO", "JOVEM", "LAGOA", "LIMAO", "LINHA", "LUGAR", "MANGA", "MARCA", "MELAO", "MENOR", "MILHO", "MOTOR", "NINHO", "NORTE", "OLHAR", "OMBRO", "ORDEM", "PALCO", "PARTE", "PEDRA", "PEIXE", "PIANO", "PRAIA", "PRATO", "PRETO", "PULSO", "QUASE", "RAIVA", "REINO", "RISCO", "ROCHA", "ROUPA", "SABOR", "SALTO", "SAUDE", "SENHA", "SINAL", "SORTE", "SUAVE", "TARDE", "TEMPO", "TERRA", "TIGRE", "TOMAR", "TORRE", "TURMA", "VALOR", "VAPOR", "VERDE", "VIRAR", "VIZINHO", "VONTADE"];
+    const medioAdditions = ["ABERTURA", "ACORDAR", "ALIMENTO", "AMBIENTE", "AMOROSO", "ANALISE", "ANOTACAO", "APOIO", "ARVORE", "ATENCAO", "AUMENTO", "AVENTURA", "BATALHA", "BELEZA", "BENEFICIO", "BLOQUEIO", "CAMPEAO", "CAPITULO", "CARINHO", "CASCATA", "CENARIO", "CERTEZA", "CHOCOLATE", "CICLISTA", "COMERCIO", "COMPANHIA", "COMPLEXO", "CONSELHO", "CONSUMO", "CONTROLE", "CONVITE", "CORRIDA", "CRIANCA", "CUIDADO", "DECISAO", "DELICADO", "DIRECAO", "DIREITO", "DIVERSAO", "ENCONTRO", "ENERGIA", "ESCRITOR", "ESPORTE", "ESTACAO", "FAMILIA", "FANTASIA", "FAVORITO", "FUNDACAO", "GARANTIA", "GIRASSOL", "GRANDEZA", "HOSPITAL", "HUMANOS", "IMPORTAR", "INICIAR", "INTEIRO", "JANELA", "LEMBRAR", "LIBERDADE", "LIMPEZA", "LIVRARIA", "MELANCIA", "MEMORIAL", "MERCADO", "MISTURA", "MORADIA", "MORANGO", "MUDANCA", "NASCER", "OFICINA", "PACIENTE", "PASSEIO", "PERGUNTA", "PESQUISA", "PESSOAL", "POPULAR", "PRESENTE", "PRODUZIR", "PROJETO", "PROMESSA", "PROTECAO", "QUALIDADE", "RECADO", "RECENTE", "RECEITA", "REGULAR", "RELACAO", "RESPOSTA", "REVISTA", "SABEDORIA", "SEGURANCA", "SEMANA", "SIMPLES", "SISTEMA", "TECLADO", "TEATRO", "TRABALHO", "TRADICAO", "VANTAGEM", "VERDADE", "VESTIDO", "VISITAR", "ZELADOR"];
+    const completaAdditions = ["ABANDONO", "ABRIGAR", "ACELERAR", "ACREDITAR", "ADIVINHA", "ADMIRAR", "AFINIDADE", "AGRICOLA", "ALIANCA", "ALMOCO", "ALTURA", "AMOSTRA", "ANIMAL", "APARECER", "APLAUSO", "ARQUITETO", "ARTESAO", "ASSUNTO", "ATITUDE", "ATRASO", "AUTOR", "AVISAR", "BAIRRO", "BALANCA", "BANDEIRA", "BARRIGA", "BILHETE", "BIOLOGIA", "BONECA", "BORBOLETA", "CABECA", "CALCULO", "CAMINHAR", "CANDIDATO", "CANETA", "CAPACETE", "CAPTURA", "CARREIRA", "CARTAZ", "CASTELO", "CAVALO", "CELEBRAR", "CEREBRO", "CHAMADA", "CIDADANIA", "CINEMA", "CIRCULO", "CLIENTE", "COBERTOR", "COLECAO", "COLEGIO", "COLORIDO", "COMBATE", "COMBINAR", "COMECO", "COMPRA", "COMPUTAR", "CONCURSO", "CONFIAR", "CONQUISTA", "CONSERTO", "CONTEXTO", "COSTUME", "COZINHA", "CRITICA", "DEBATE", "DECORAR", "DEFESA", "DEGRAU", "DESEJO", "DESFILE", "DESTINO", "DETALHE", "DIAMANTE", "DIALOGAR", "DIFERENTE", "DINHEIRO", "DIPLOMA", "DIVERSO", "DOENCA", "DOUTOR", "DUVIDA", "ELEGANTE", "EMPRESA", "ENSINO", "ENTREGA", "ESCOLHA", "ESPERTO", "ESTUDANTE", "FAMILIAR", "FANTASMA", "FEITICO", "FERIADO", "FIGURA", "FIRMEZA", "FOGUETE", "FRONTEIRA", "FUNCAO", "FUNDAR", "GALOPE", "GASOLINA", "GELADO", "GENTIL", "GINASIO", "GRAVURA", "HUMILDE", "IGREJA", "IMPACTO", "INCLUIR", "INDUSTRIA", "INVERNO", "JORNADA", "JULGADO", "LATERAL", "LEALDADE", "LENDARIO", "LIDERAR", "LIMITE", "LOTERIA", "MADEIRA", "MAIORIA", "MANEIRA", "MARINHO", "MASCARA", "MASSAGEM", "MEDALHA", "MEDICINA", "MELHOR", "MENTIRA", "MESTRADO", "MILAGRE", "MINUTO", "MODELO", "MONITOR", "MONTANHA", "MORADOR", "MOTIVO", "MUSEU", "MUSICAL", "NARRADOR", "NACIONAL", "NEBLINA", "NEGOCIO", "NOVIDADE", "OBJETIVO", "OBSERVAR", "OCORRER", "OPERACAO", "ORIENTAR", "ORIGEM", "PAGINA", "PARECER", "PARQUE", "PASSADO", "PASSAGEM", "PEDIDO", "PERFEITO", "PERIGO", "PINTURA", "PIRAMIDE", "PLANETA", "PLANTAR", "PLATEIA", "POESIA", "PODEROSO", "POLITICA", "PONTEIRO", "POTENCIA", "PREMIO", "PREPARO", "PRINCIPAL", "PRIVADO", "PROGRESSO", "PROMOVER", "PROPOSITO", "PROVA", "PUBLICO", "QUARTO", "QUESTAO", "QUINTAL", "RAPIDO", "RECICLAR", "RECORDAR", "REFORMA", "REGIAO", "REMEDIO", "RESPEITO", "REUNIAO", "RIQUEZA", "ROTEIRO", "SAGRADO", "SATELITE", "SECRETO", "SEMENTE", "SENTIDO", "SERVICO", "SOBRINHO", "SOLUCAO", "SUSPEITA", "TAMANHO", "TEORIA", "TERRENO", "TESOURO", "TRADUZIR", "TRAVESSIA", "TRIANGULO", "UNIDADE", "URGENTE", "USUARIO", "VENCER", "VERAO", "VIGOROSO", "VINCULO", "VITAMINA"];
+    dictionaryProfiles.leve.words = [...dictionaryProfiles.leve.words, ...leveAdditions];
+    dictionaryProfiles.medio.words = [...dictionaryProfiles.medio.words, ...leveAdditions, ...medioAdditions];
+    dictionaryProfiles.completa.words = [...dictionaryProfiles.completa.words, ...leveAdditions, ...medioAdditions, ...completaAdditions];
+    Object.values(dictionaryProfiles).forEach((profile) => {
+      profile.words = [...new Set(profile.words.map((word) => normalize(word)).filter((word) => word.length >= MIN_WORD_LENGTH && word.length <= MAX_WORD_LENGTH))];
+    });
+    const dictionaryByLength = {}
+    Object.values(dictionaryProfiles).forEach((profile) => {
+      profile.words.forEach((word) => {
+        const normalized = normalize(word);
+        const length = normalized.length;
+        if (!dictionaryByLength[length]) dictionaryByLength[length] = [];
+        if (!dictionaryByLength[length].includes(normalized)) dictionaryByLength[length].push(normalized);
+      });
+    });
+    const puzzles = Object.entries(wordEntries).map(([word, meta]) => ({ word, ...meta }));
+    const normalizedWordEntries = Object.fromEntries(Object.entries(wordEntries).map(([word, meta]) => [normalize(word), meta]));
+    const acceptedWords = new Set(Object.values(dictionaryByLength).flatMap((words) => words));
     const concepts = {
       ritual: { number: "01", name: "Estúdio Palavra · edição diária", tag: "01 — RITUAL", title: "Uma pausa. Uma palavra.", description: "Um desafio curto e claro para entrar na rotina sem pedir mais tempo do que precisa.", kicker: "A proposta", sideTitle: "Seu momento de foco.", sideCopy: "Uma rodada por dia. As letras mostram o caminho; o resto é raciocínio seu.", sideSmall: "As tentativas são calculadas pelo tamanho da palavra: teto de letras × 1,1.", mark: "Sem pressa, sem conta", decision: "O desafio do dia é o primeiro plano. A interface guarda espaço para aprender sem adicionar etapas à partida." },
       caderno: { number: "02", name: "Caderno de palavras · edição diária", tag: "02 — CADERNO", title: "Jogue. Descubra. Aprenda.", description: "Uma partida com espaço para a palavra continuar fazendo sentido depois que o jogo termina.", kicker: "Depois da rodada", sideTitle: "A resposta vira repertório.", sideCopy: "Ao concluir, a grafia correta aparece junto de uma definição curta e uma frase de exemplo.", sideSmall: "Sem interromper a partida com explicações ou pistas que entreguem a resposta.", mark: "Vocabulário em contexto", decision: "Aprendizado aparece no momento certo: depois da descoberta, com grafia acentuada, significado e exemplo." },
       acesso: { number: "03", name: "Palavra clara · edição diária", tag: "03 — ACESSO", title: "Pistas claras para todo mundo.", description: "Contraste, símbolos e uma ordem previsível fazem as pistas funcionarem sem depender só das cores.", kicker: "Acessibilidade", sideTitle: "A cor nunca fala sozinha.", sideCopy: "Cada estado tem símbolo e descrição. O jogo também aceita teclado físico, com foco visível.", sideSmall: "As mensagens anunciam a tentativa e o número de chances restantes para leitores de tela.", mark: "Teclado · leitor de tela", decision: "As pistas combinam cor, símbolo e texto. A rodada não depende de visão cromática ou animação para ser compreendida." }
     };
     const alphabetRows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-    const state = { mode: "diario", puzzle: null, guesses: [], finished: false };
+    const state = { mode: "diario", dictionary: "medio", puzzle: null, guesses: [], finished: false, dictionaryOpen: false };
     const ui = {
       mockup: document.querySelector("#mockup"), tabs: [...document.querySelectorAll(".tab")], variantCaption: document.querySelector("#variant-caption"),
       board: document.querySelector("#board"), facts: document.querySelector("#puzzle-facts"), date: document.querySelector("#game-date"),
       input: document.querySelector("#guess-input"), form: document.querySelector("#guess-form"), status: document.querySelector("#status-line"),
       keyboard: document.querySelector("#virtual-keyboard"), answerCard: document.querySelector("#answer-card"), answerWord: document.querySelector("#answer-word"),
       answerDefinition: document.querySelector("#answer-definition"), answerExample: document.querySelector("#answer-example"), answerLabel: document.querySelector("#answer-label"),
-      nextRound: document.querySelector("#next-round"), dailyMode: document.querySelector("#daily-mode"), infiniteMode: document.querySelector("#infinite-mode")
+      nextRound: document.querySelector("#next-round"), dailyMode: document.querySelector("#daily-mode"), infiniteMode: document.querySelector("#infinite-mode"), dictionaryButtons: [...document.querySelectorAll(".dict-button")],
+      dictionaryPanel: document.querySelector("#dictionary-panel"), dictionarySummary: document.querySelector("#dictionary-summary"), dictionaryCounts: document.querySelector("#dictionary-counts"), dictionaryList: document.querySelector("#dictionary-list"),
+      toggleDictionary: document.querySelector("#toggle-dictionary"), closeDictionary: document.querySelector("#close-dictionary")
     };
     function normalize(value) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleUpperCase("pt-BR").replace(/[^A-Z]/g, ""); }
     function dateKey() { return new Date().toISOString().slice(0, 10); }
+    function activeDictionaryWords() { return dictionaryProfiles[state.dictionary].words.map((word) => normalize(word)); }
+    function activeDictionaryByLength() {
+      const map = {};
+      activeDictionaryWords().forEach((word) => {
+        const length = word.length;
+        if (!map[length]) map[length] = [];
+        if (!map[length].includes(word)) map[length].push(word);
+      });
+      return map;
+    }
+    function availableWordLengths() {
+      return Object.entries(activeDictionaryByLength())
+        .filter(([length, words]) => Number(length) >= MIN_WORD_LENGTH && Number(length) <= MAX_WORD_LENGTH && words.length > 0)
+        .map(([length]) => Number(length));
+    }
+    function randomWordLength() {
+      const lengths = availableWordLengths();
+      if (!lengths.length) throw new Error("O dicionário ativo não tem palavras com tamanho válido.");
+      return lengths[Math.floor(Math.random() * lengths.length)];
+    }
+    function renderDictionaryPanel() {
+      const words = [...new Set(activeDictionaryWords())].sort();
+      const counts = {};
+      words.forEach((word) => {
+        const length = word.length;
+        counts[length] = (counts[length] || 0) + 1;
+      });
+      const lengths = Object.keys(counts).map(Number).sort((a, b) => a - b);
+      ui.dictionarySummary.textContent = `Dicionário ${dictionaryProfiles[state.dictionary].label}: ${words.length} palavras internas e ${lengths.length} tamanhos diferentes de palavra.`;
+      ui.dictionaryCounts.innerHTML = lengths.map((length) => `<span><strong>${length}</strong> letras: ${counts[length]}</span>`).join("");
+      ui.dictionaryList.innerHTML = words.slice(0, 30).map((word) => `<li>${word}</li>`).join("");
+      if (state.dictionaryOpen) ui.dictionaryPanel.classList.add("visible");
+      else ui.dictionaryPanel.classList.remove("visible");
+    }
+    function puzzleForWord(word) {
+      const selected = normalize(word);
+      const meta = normalizedWordEntries[selected] || {
+        definition: `Palavra com ${selected.length} letras, escolhida com base no tamanho da rodada.`,
+        example: `A palavra ${selected} entra na lista de acordo com o número de letras.`
+      };
+      return { word: selected, ...meta };
+    }
+    function pickWordForLength(length) {
+      const pool = (activeDictionaryByLength()[length] || []).filter(Boolean);
+      if (!Number.isInteger(length) || length < MIN_WORD_LENGTH || length > MAX_WORD_LENGTH || !pool.length) {
+        throw new RangeError(`Não há palavras disponíveis com ${length} letras no dicionário ativo.`);
+      }
+      return puzzleForWord(pool[Math.floor(Math.random() * pool.length)]);
+    }
     function getDailyPuzzle() {
+      const lengths = availableWordLengths();
+      if (!lengths.length) throw new Error("O dicionário ativo não tem palavras para o desafio diário.");
       const day = Math.floor(Date.now() / 86400000);
-      return puzzles[((day % puzzles.length) + puzzles.length) % puzzles.length];
+      const length = lengths[(day % lengths.length + lengths.length) % lengths.length];
+      return pickWordForLength(length);
     }
     function attemptsAllowed() { return Math.ceil(Array.from(normalize(state.puzzle.word)).length * 1.1); }
     function storageKey() { return `palavra-diaria-${dateKey()}`; }
@@ -332,13 +496,18 @@
     }
     function choosePuzzle(mode) {
       state.mode = mode;
-      state.puzzle = mode === "diario" ? getDailyPuzzle() : puzzles[Math.floor(Math.random() * puzzles.length)];
+      if (mode === "diario") {
+        state.puzzle = getDailyPuzzle();
+      } else {
+        state.puzzle = pickWordForLength(randomWordLength());
+      }
       state.guesses = [];
       state.finished = false;
       if (mode === "diario") loadDailyProgress();
       ui.input.value = "";
       ui.status.textContent = mode === "diario" ? "Digite uma palavra para começar." : "Rodada independente. Digite sua primeira palavra.";
       render();
+      ui.input.focus();
     }
     function evaluate(guess, answer) {
       const letters = Array.from(guess);
@@ -428,6 +597,11 @@
       ui.date.textContent = state.mode === "diario" ? new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date()) : "MODO INFINITO · SEM PROGRESSO";
       ui.dailyMode.setAttribute("aria-pressed", String(state.mode === "diario"));
       ui.infiniteMode.setAttribute("aria-pressed", String(state.mode === "infinito"));
+      ui.dictionaryButtons.forEach((button) => {
+        const selected = button.dataset.dictionary === state.dictionary;
+        button.setAttribute("aria-pressed", String(selected));
+      });
+      renderDictionaryPanel();
     }
     function renderAnswer() {
       const won = state.guesses.some((guess) => normalize(guess) === normalize(state.puzzle.word));
@@ -444,13 +618,39 @@
       if (state.finished || Array.from(ui.input.value).length >= Array.from(normalize(state.puzzle.word)).length) return;
       ui.input.value += letter; renderBoard(); ui.input.focus();
     }
+    function handlePhysicalTyping(event) {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA" || activeEl.tagName === "SELECT")) return;
+      if (state.finished || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key === "Enter") {
+        event.preventDefault();
+        ui.form.requestSubmit();
+        return;
+      }
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        ui.input.value = ui.input.value.slice(0, -1);
+        renderBoard();
+        ui.input.focus();
+        return;
+      }
+      if (event.key.length !== 1) return;
+      const candidate = event.key.toUpperCase();
+      if (!/[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/i.test(candidate)) return;
+      if (Array.from(ui.input.value).length >= Array.from(normalize(state.puzzle.word)).length) return;
+      ui.input.focus();
+      ui.input.value += candidate;
+      renderBoard();
+      ui.input.focus();
+    }
     function sendGuess(event) {
       event.preventDefault();
       if (state.finished) return;
       const guess = normalize(ui.input.value);
       const letters = Array.from(normalize(state.puzzle.word)).length;
       if (Array.from(guess).length !== letters) { ui.status.textContent = `Digite uma palavra com ${letters} letras.`; ui.input.focus(); return; }
-      if (!acceptedWords.has(guess)) { ui.status.textContent = "Essa palavra não está na lista de palpites deste protótipo."; ui.input.focus(); return; }
+      const validWordsForLength = new Set((activeDictionaryByLength()[letters] || []).map((word) => normalize(word)));
+      if (!validWordsForLength.has(guess)) { ui.status.textContent = `Essa palavra não está na lista de ${letters} letras do dicionário ${dictionaryProfiles[state.dictionary].label.toLowerCase()}.`; ui.input.focus(); return; }
       if (state.guesses.some((item) => normalize(item) === guess)) { ui.status.textContent = "Você já usou essa palavra. Tente outra."; ui.input.focus(); return; }
       state.guesses.push(guess);
       const won = guess === normalize(state.puzzle.word);
@@ -498,15 +698,37 @@
     });
     ui.dailyMode.addEventListener("click", () => choosePuzzle("diario"));
     ui.infiniteMode.addEventListener("click", () => choosePuzzle("infinito"));
+    ui.dictionaryButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        state.dictionary = button.dataset.dictionary;
+        choosePuzzle(state.mode);
+      });
+    });
+    ui.toggleDictionary.addEventListener("click", () => {
+      state.dictionaryOpen = !state.dictionaryOpen;
+      renderDictionaryPanel();
+    });
+    ui.closeDictionary.addEventListener("click", () => {
+      state.dictionaryOpen = false;
+      renderDictionaryPanel();
+    });
     ui.nextRound.addEventListener("click", () => {
       const previous = state.puzzle;
-      do { state.puzzle = puzzles[Math.floor(Math.random() * puzzles.length)]; } while (puzzles.length > 1 && state.puzzle === previous);
+      const candidates = availableWordLengths().flatMap((length) => activeDictionaryByLength()[length]).filter((word) => word !== previous.word);
+      const selected = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : previous.word;
+      const next = puzzleForWord(selected);
+      state.puzzle = next;
       state.guesses = []; state.finished = false; ui.input.value = "";
       ui.status.textContent = "Nova rodada independente. Digite sua primeira palavra."; render(); ui.input.focus();
     });
     ui.form.addEventListener("submit", sendGuess);
     ui.input.addEventListener("input", () => { const normalized = normalize(ui.input.value); if (ui.input.value !== normalized) ui.input.value = normalized; renderBoard(); });
-    ui.input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); ui.form.requestSubmit(); } });
+    ui.input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") { event.preventDefault(); ui.form.requestSubmit(); }
+      if (event.key === "Backspace") { return; }
+      if (event.key.length === 1 && /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/i.test(event.key)) { const normalized = normalize(event.key); if (normalized) { event.preventDefault(); addLetter(normalized); } }
+    });
+    window.addEventListener("keydown", handlePhysicalTyping);
     window.addEventListener("resize", setTileSize);
     state.puzzle = getDailyPuzzle();
     loadDailyProgress();
@@ -514,6 +736,7 @@
     else if (state.guesses.length) ui.status.textContent = `Partida retomada. ${attemptsAllowed() - state.guesses.length} tentativas restantes.`;
     ui.date.textContent = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date());
     render();
+    ui.input.focus();
   </script>
 </body>
 </html>
